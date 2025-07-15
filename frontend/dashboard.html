@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Vote Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>🗳️ Voting Dashboard</h1>
+
+    <div class="voter-profile" id="voterProfile" style="display: none;">
+      <h3>👤 Voter Info</h3>
+      <img id="voterPhoto" style="width: 100%; max-height: 300px; border-radius: 10px;" />
+      <p><strong>Name:</strong> <span id="voterName"></span></p>
+    </div>
+
+    <div id="voteSection" style="display: none;">
+      <div class="form-group">
+        <label for="candidate">Select Candidate:</label>
+        <select id="candidate">
+          <option disabled selected value="">-- Choose --</option>
+          <option value="Alice">Alice</option>
+          <option value="Bob">Bob</option>
+          <option value="Charlie">Charlie</option>
+        </select>
+      </div>
+
+      <button class="btn-primary" onclick="submitVote()">🗳️ Submit Vote</button>
+    </div>
+
+    <div id="leaderboard" style="display: none;">
+      <h3>📊 Live Vote Count</h3>
+      <ul id="voteResults"></ul>
+    </div>
+
+    <div id="toast"></div>
+  </div>
+
+  <!-- View All Voters -->
+<div style="margin-top: 40px;">
+  <button class="btn-secondary" onclick="viewAllVoters()">📋 View All Registered Voters</button>
+  <div id="allVoters" style="margin-top: 20px;"></div>
+</div>
+
+
+  <script>
+    async function loadVoterProfile() {
+      const res = await fetch("/active-voter");
+      const data = await res.json();
+
+      if (!data || !data.name || !data.photo) {
+        alert("No voter is currently active. Go register first.");
+        window.location.href = "/register.html";
+        return;
+      }
+
+      document.getElementById("voterName").textContent = data.name;
+      document.getElementById("voterPhoto").src = data.photo;
+      document.getElementById("voterProfile").style.display = "block";
+
+      const voteStatus = await fetch("/check-vote?face_id=" + data.face_id);
+      const voteData = await voteStatus.json();
+
+      if (voteData.voted) {
+        showToast("⚠️ You have already voted!");
+      } else {
+        document.getElementById("voteSection").style.display = "block";
+      }
+
+      loadVoteCounts();
+    }
+
+    async function submitVote() {
+      const candidate = document.getElementById("candidate").value;
+      if (!candidate) return showToast("Please select a candidate.");
+
+      const res = await fetch("/submit-vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ candidate })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast("Vote submitted successfully!");
+        document.getElementById("voteSection").style.display = "none";
+        loadVoteCounts();
+      } else {
+        showToast("❌ " + data.message);
+      }
+    }
+
+    async function loadVoteCounts() {
+      const res = await fetch("/vote-results");
+      const results = await res.json();
+
+      const list = document.getElementById("voteResults");
+      list.innerHTML = "";
+      for (const [name, count] of Object.entries(results)) {
+        const li = document.createElement("li");
+        li.innerText = `${name}: ${count} vote(s)`;
+        list.appendChild(li);
+      }
+      document.getElementById("leaderboard").style.display = "block";
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.innerText = msg;
+      toast.className = "show";
+      setTimeout(() => (toast.className = toast.className.replace("show", "")), 3000);
+    }
+
+    loadVoterProfile();
+
+    async function viewAllVoters() {
+  const res = await fetch("/voters");
+  const data = await res.json();
+
+  const container = document.getElementById("allVoters");
+  container.innerHTML = `<h3>Registered Voters</h3>`;
+
+  if (!data.length) {
+    container.innerHTML += "<p>No voters found.</p>";
+    return;
+  }
+
+  data.forEach(voter => {
+    container.innerHTML += `
+      <div class="voter-card" style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 10px;">
+        <img src="/${voter.photo}" alt="voter" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 10px;" />
+        <p><strong>Name:</strong> ${voter.name}</p>
+        <p><strong>Age:</strong> ${voter.age}</p>
+      </div>
+    `;
+  });
+}
+
+  </script>
+</body>
+</html>

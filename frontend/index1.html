@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blockchain E-Voting System</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Blockchain E-Voting Portal</h1>
+
+    <!-- Upload Face Image -->
+    <div class="form-group">
+      <label for="faceInput">Upload Face Image</label>
+      <input type="file" id="faceInput" accept="image/*" onchange="previewImage()" />
+      <img id="preview" style="display:none; width: 100%; margin-top: 10px; border-radius: 10px;" />
+    </div>
+
+    <!-- Birthdate -->
+    <div class="form-group">
+      <label for="birthdate">Enter Birthdate</label>
+      <input type="date" id="birthdate" placeholder="MM/DD/YYYY" />
+    </div>
+
+    <!-- Verify Button -->
+    <button onclick="verifyFace()" class="btn-primary">Verify & Vote</button>
+
+    <!-- Vote Section -->
+    <div id="voteSection" style="display: none; margin-top: 30px;">
+      <div class="form-group">
+        <label for="candidates">Select Candidate</label>
+        <select id="candidates" onchange="showCandidateInfo()">
+          <option disabled selected value="">-- Choose a Candidate --</option>
+        </select>
+      </div>
+
+      <!-- Candidate Info Preview -->
+      <div id="candidateInfo" style="display: none; margin-bottom: 20px;">
+        <img id="candidateImage" style="width: 100%; border-radius: 10px;" />
+        <p id="candidateBio" style="margin-top: 10px; font-style: italic;"></p>
+      </div>
+
+      <!-- Cast Vote -->
+      <button onclick="vote()" class="btn-secondary">Cast Vote</button>
+    </div>
+
+    <!-- Vote Leaderboard -->
+    <div id="leaderboard" style="display: none; margin-top: 40px;">
+      <h3>Real-Time Vote Leaderboard</h3>
+      <ul id="voteResults"></ul>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast"></div>
+  <button id="finishVote">Finish & Logout</button>
+<p id="logoutMessage" style="color: green; font-weight: bold;"></p>
+
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.3.6/dist/web3.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

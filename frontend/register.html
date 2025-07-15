@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live Camera Registration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Live Voter Registration</h1>
+
+    <div class="form-group">
+      <label>Full Name (Surname First Middle)</label>
+      <input type="text" id="fullname" placeholder="e.g. John Smith Doe" />
+    </div>
+
+    <div class="form-group">
+      <label>Age</label>
+      <input type="number" id="age" min="0" />
+    </div>
+
+    <div class="form-group">
+      <label>Camera Feed</label>
+      <video id="video" autoplay style="width: 100%; border-radius: 8px;"></video>
+      <button class="btn-secondary" onclick="capture()"> Capture Face</button>
+    </div>
+
+    <canvas id="canvas" style="display:none;"></canvas>
+    <img id="preview" style="display:none; margin-top: 10px; border-radius: 10px; width: 100%;" />
+
+    <button class="btn-primary" onclick="register()"> Register</button>
+    <div id="toast"></div>
+  </div>
+
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const preview = document.getElementById("preview");
+
+    // Start camera
+    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+      video.srcObject = stream;
+    }).catch(err => {
+      alert("Camera access denied or not available.");
+    });
+
+    // Capture photo
+    function capture() {
+      const ctx = canvas.getContext("2d");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const dataURL = canvas.toDataURL("image/jpeg");
+      preview.src = dataURL;
+      preview.style.display = "block";
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.innerText = message;
+      toast.className = "show";
+      setTimeout(() => (toast.className = toast.className.replace("show", "")), 3000);
+    }
+
+    async function register() {
+      const name = document.getElementById("fullname").value.trim();
+      const age = parseInt(document.getElementById("age").value);
+      const dataURL = preview.src;
+
+      if (!name || !age || !dataURL.includes("data:image")) {
+        showToast("❌ Please fill all fields and capture your face.");
+        return;
+      }
+
+      // Convert base64 to blob
+      const blob = await (await fetch(dataURL)).blob();
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("age", age);
+      formData.append("photo", blob, "captured.jpg");
+
+      const res = await fetch("/register", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast("Registration successful!");
+        setTimeout(() => window.location.href = "/vote.html", 2000);
+      } else {
+        showToast("❌ " + data.message);
+      }
+    }
+  </script>
+</body>
+</html>

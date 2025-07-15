@@ -1,0 +1,14 @@
+# Ignore Python virtual environment
+venv/
+
+# Node modules
+node_modules/
+
+# Cache and logs
+__pycache__/
+*.log
+*.pyc
+.DS_Store
+
+# Environment variables
+.env

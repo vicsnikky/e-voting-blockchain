@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      background: #f1f2f6;
+    }
+    h2 {
+      text-align: center;
+    }
+    .results {
+      background: white;
+      padding: 2rem;
+      max-width: 700px;
+      margin: auto;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    .position {
+      margin-bottom: 2rem;
+    }
+    .candidate {
+      margin-left: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <h2>📊 Admin Vote Results</h2>
+  <div class="results" id="results"></div>
+
+  <script>
+    fetch("/vote-results")
+      .then(res => res.json())
+      .then(results => {
+        const container = document.getElementById("results");
+        for (const position in results) {
+          const posDiv = document.createElement("div");
+          posDiv.classList.add("position");
+          posDiv.innerHTML = `<h3>${position}</h3>`;
+          const votes = results[position];
+          for (const candidate in votes) {
+            const p = document.createElement("p");
+            p.classList.add("candidate");
+            p.textContent = `${candidate}: ${votes[candidate]} vote(s)`;
+            posDiv.appendChild(p);
+          }
+          container.appendChild(posDiv);
+        }
+      });
+  </script>
+</body>
+</html>

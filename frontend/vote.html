@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vote</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f8f9fa;
+      padding: 2rem;
+    }
+    .container {
+      background: #fff;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 1rem;
+    }
+    select, button {
+      width: 100%;
+      padding: 0.7rem;
+      margin-top: 0.3rem;
+    }
+    .voter-info {
+      text-align: center;
+    }
+    .voter-info img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin-bottom: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🗳️ Vote</h2>
+    <div id="voterInfo" class="voter-info"></div>
+    <form id="voteForm"></form>
+    <button id="submitVote">Submit Vote</button>
+    <button id="logout">Finish & Logout</button>
+  </div>
+
+  <script>
+    const voteForm = document.getElementById("voteForm");
+
+    fetch("/active-voter")
+      .then(res => res.json())
+      .then(data => {
+        if (data.name) {
+          document.getElementById("voterInfo").innerHTML = `
+           <!-- <img src="/registered_photos/${data.face_id}.jpg" /> -->
+            <!-- <img id="voterPhoto" src="" alt="Voter Photo" /> -->
+
+            <p><strong>${data.name}</strong></p>
+          `;
+        }
+      });
+
+    fetch("/candidates")
+      .then(res => res.json())
+      .then(candidates => {
+        for (const position in candidates) {
+          const label = document.createElement("label");
+          label.textContent = position;
+          const select = document.createElement("select");
+          select.name = position;
+          select.innerHTML = `<option value="">-- Select --</option>`;
+          candidates[position].forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c;
+            opt.textContent = c;
+            select.appendChild(opt);
+          });
+          voteForm.appendChild(label);
+          voteForm.appendChild(select);
+        }
+      });
+
+    document.getElementById("submitVote").onclick = () => {
+      const selections = {};
+      const selects = document.querySelectorAll("select");
+      for (let sel of selects) {
+        if (!sel.value) {
+          alert("Please vote for all positions.");
+          return;
+        }
+        selections[sel.name] = sel.value;
+      }
+
+      fetch("/submit-vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selections })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) alert("✅ Vote submitted!");
+          else alert("❌ " + data.message);
+        });
+    };
+
+    document.getElementById("logout").onclick = () => {
+      alert("Thanks for voting!");
+      window.location.href = "register.html";
+    };
+  </script>
+</body>
+</html>
